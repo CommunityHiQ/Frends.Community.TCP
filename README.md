@@ -6,7 +6,7 @@ frends Community Task for TCPTasks
 
 - [Installing](#installing)
 - [Tasks](#tasks)
-     - [TCPTasks](#TCPTasks)
+     - [ASCIIRequest](#ASCIIRequest)
 - [Building](#building)
 - [Contributing](#contributing)
 - [Change Log](#change-log)
@@ -18,17 +18,31 @@ https://www.myget.org/F/frends-community/api/v3/index.json and in Gallery view i
 
 # Tasks
 
-## TCPTasks
+## ASCIIRequest
 
+Send one or more TCP/IP Ascii requests
 
-### Properties
+### Parameters
 
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Commands | `string` | A command to send | `< GET MODEL >` |
+| IpAddress | `string` | Host IP address | `127.0.0.1` |
+| Port | `int` | Host port number | `13000` |
 
 ### Options
 
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Timeout | `int` | Reader timeout in seconds | `15` |
 
 ### Returns
 
+Responses in JArray
+
+| Property | Type | Description | Example |
+| -------- | -------- | -------- | -------- |
+| Responses | `JArray` | Command response data | `{["< MODEL... >"]}` |
 
 # Building
 
@@ -63,4 +77,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 | Version | Changes |
 | ------- | ------- |
-| 0.0.1   | Development still going on |
+| 0.0.1   | Demo version |
