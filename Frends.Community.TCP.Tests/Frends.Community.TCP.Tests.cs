@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
+using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
@@ -9,6 +10,17 @@ namespace Frends.Community.TCP.Tests
     [TestFixture]
     class TestClass
     {
+
+        [OneTimeSetUp]
+        public void StartListener()
+        {
+
+            Thread listenerThread = new Thread(new ThreadStart(TestListener.Listener));
+
+            listenerThread.Start();
+
+        }
+
         [Test]
         public void TestSendMessage()
         {
