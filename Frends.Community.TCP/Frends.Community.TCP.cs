@@ -29,8 +29,8 @@ namespace Frends.Community.TCP
                     await client.ConnectAsync(ip, input.Port);
 
                     using (NetworkStream stream = client.GetStream())
-                    using (var writer = new StreamWriter(stream))
-                    using (var reader = new StreamReader(stream))
+                    //using (var writer = new StreamWriter(stream))
+                    //using (var reader = new StreamReader(stream))
                     {
 
                         stream.ReadTimeout = options.Timeout;
@@ -39,14 +39,19 @@ namespace Frends.Community.TCP
 
                         foreach (var cmd in input.Command)
                         {
-                            Byte[] data = System.Text.Encoding.ASCII.GetBytes(cmd);
 
-                            await stream.WriteAsync(data, 0, data.Length);
+                            //Flush incoming stream
 
-                            data = new Byte[256];
+                            Byte[] dataOut = new Byte[8192];
+                            if (stream.DataAvailable)
+                                await stream.ReadAsync(dataOut, 0, dataOut.Length);
 
-                            Int32 bytes = await stream.ReadAsync(data, 0, data.Length);
-                            string responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
+                            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
+
+                            await stream.WriteAsync(dataIn, 0, dataIn.Length);
+
+                            Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
+                            string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
                             output.Responses.Add(responseData);
 
                         }

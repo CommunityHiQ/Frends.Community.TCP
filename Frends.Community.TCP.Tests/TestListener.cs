@@ -45,6 +45,7 @@ namespace Frends.Community.TCP.Tests
                         byte[] msg = System.Text.Encoding.ASCII.GetBytes(data + "Response");
 
                         stream.Write(msg, 0, msg.Length);
+
                     }
 
                     client.Close();
