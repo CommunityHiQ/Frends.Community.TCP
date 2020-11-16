@@ -45,10 +45,18 @@ namespace Frends.Community.TCP.Tests
 
                         if (data.Equals("STOP"))
                             break;
+                        else if (data.Equals("SEND_EMPTY_RESP"))
+                        {
+                            byte[] msgEmpty = System.Text.Encoding.ASCII.GetBytes("");
+                            stream.Write(msgEmpty, 0, msgEmpty.Length);
+                        }
 
-                        byte[] msg = System.Text.Encoding.ASCII.GetBytes(data + "Response");
+                        else
+                        {
+                            byte[] msg = System.Text.Encoding.ASCII.GetBytes(data + "Response");
+                            stream.Write(msg, 0, msg.Length);
+                        }
 
-                        stream.Write(msg, 0, msg.Length);
 
                     }
 

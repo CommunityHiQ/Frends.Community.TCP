@@ -43,16 +43,21 @@ namespace Frends.Community.TCP
                             //Flush incoming stream
 
                             Byte[] dataOut = new Byte[8192];
-                            if (stream.DataAvailable)
-                                await stream.ReadAsync(dataOut, 0, dataOut.Length);
+                            if (stream.DataAvailable)                                
+                              await stream.ReadAsync(dataOut, 0, dataOut.Length);
 
                             Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
 
-                            Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
-                            string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
-                            output.Responses.Add(responseData);
+                            Thread.Sleep(100);
+
+                            if (stream.DataAvailable)
+                            {
+                                Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
+                                string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
+                                output.Responses.Add(responseData);
+                            }
 
                         }
 
