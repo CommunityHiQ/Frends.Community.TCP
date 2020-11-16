@@ -31,6 +31,10 @@ namespace Frends.Community.TCP.Tests
 
                     NetworkStream stream = client.GetStream();
 
+                    //msgStart should be ignored by the task. Only responses to commands should be returned.
+                    byte[] msgStart = System.Text.Encoding.ASCII.GetBytes(data + "Message on listener launch");
+                    stream.Write(msgStart, 0, msgStart.Length);
+
                     int i;
 
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)

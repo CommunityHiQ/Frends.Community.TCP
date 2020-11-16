@@ -25,7 +25,7 @@ namespace Frends.Community.TCP.Tests
 
             var input = new Parameters
             {
-                Command = new string[] { "COMMAND1", "COMMAND2" },
+                Command = new string[] { "COMMAND1", "COMMAND2", "STOP" },
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };
@@ -36,7 +36,7 @@ namespace Frends.Community.TCP.Tests
             };
 
             var res1 = TCPTasks.ASCIIRequest(input, options).Result.Responses;
-            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");
+            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response','']");
             Assert.AreEqual(expected, res1);
 
         }
