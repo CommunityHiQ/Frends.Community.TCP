@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
-    //[Ignore("Tests pass locally")]
+    [Ignore("Tests pass locally")]
 
     [TestFixture]
     class TestClass
@@ -38,7 +38,7 @@ namespace Frends.Community.TCP.Tests
             };
 
             var res1 = TCPTasks.ASCIIRequest(input, options).Result.Responses;
-            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");
+            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");                        
             Assert.AreEqual(expected.ToString(), res1.ToString());
 
         }

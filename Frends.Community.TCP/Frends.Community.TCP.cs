@@ -50,7 +50,7 @@ namespace Frends.Community.TCP
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
 
-                            Thread.Sleep(100);
+                            //Thread.Sleep(100);
 
                             if (stream.DataAvailable)
                             {
