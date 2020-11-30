@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
-    [Ignore("Tests pass locally")]
+    [Ignore("Test locally")]
 
     [TestFixture]
     class TestClass
@@ -22,25 +22,40 @@ namespace Frends.Community.TCP.Tests
         }
 
         [Test]
-        public void TestSendMessage()
+        public void TestSendAndReceive()
         {
 
             var input = new Parameters
             {
-                Command = new string[] { "COMMAND1", "COMMAND2", "", "SEND_EMPTY_RESP", "STOP" },
+                Command = new string[] { "COMMAND1", "COMMAND2"},
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };
 
             var options = new Options
             {
-                Timeout = 15
+                Timeout = 1000,
+                ResponseStart = "COMMAND",
+                ResponseEnd = "Response"
             };
 
+            var input2 = new Parameters
+            {
+                Command = new string[] { "COMMAND1", "COMMAND2", "", "SEND_EMPTY_RESP", "STOP" },
+                IpAddress = "127.0.0.1",
+                Port = 13000
+            };
+
+            var options2 = new Options
+            {
+                Timeout = 1000
+            };
             var res1 = TCPTasks.ASCIIRequest(input, options).Result.Responses;
-            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");                        
-            Assert.AreEqual(expected.ToString(), res1.ToString());
+            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");
+            Assert.AreEqual(expected.ToString(), res1.ToString()) ;
+            Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2), Throws.Exception);          
 
         }
+
     }
 }

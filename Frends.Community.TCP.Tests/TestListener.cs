@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Frends.Community.TCP.Tests
@@ -39,6 +40,8 @@ namespace Frends.Community.TCP.Tests
 
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
+                        Thread.Sleep(100);
+
                         data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
                         data = data.ToUpper();
