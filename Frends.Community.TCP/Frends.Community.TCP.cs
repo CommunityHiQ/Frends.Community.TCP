@@ -41,6 +41,7 @@ namespace Frends.Community.TCP
                             Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
+                            cancellationToken.ThrowIfCancellationRequested();
 
                             int timeout = options.Timeout;
                             var task = ReadAsync(stream, options.ResponseStart, options.ResponseEnd);
