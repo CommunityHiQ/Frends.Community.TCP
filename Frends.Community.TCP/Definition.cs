@@ -24,7 +24,7 @@ namespace Frends.Community.TCP
         /// <summary>
         /// Task timeout (ms). Operation will timeout in case of empty response.
         /// </summary>
-        [DefaultValue(1000)]
+        [DefaultValue(10000)]
         public int Timeout { get; set; }
 
         public string ResponseStart { get; set; }

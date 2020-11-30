@@ -40,7 +40,7 @@ namespace Frends.Community.TCP.Tests
 
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
-                        Thread.Sleep(100);
+                        //Thread.Sleep(100);
 
                         data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
@@ -56,7 +56,7 @@ namespace Frends.Community.TCP.Tests
 
                         else
                         {
-                            byte[] msg = System.Text.Encoding.ASCII.GetBytes(data + "Response");
+                            byte[] msg = System.Text.Encoding.ASCII.GetBytes("<" + data + "Response" + ">");
                             stream.Write(msg, 0, msg.Length);
                         }
 

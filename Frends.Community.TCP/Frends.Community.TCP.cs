@@ -13,90 +13,13 @@ namespace Frends.Community.TCP
 {
     public static class TCPTasks
     {
-        //    /// <summary>
-        //    /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCPClient
-        //    /// </summary>
-        //    public static async Task<Result> ASCIIRequest(Parameters input, Options options)
-        //    {
-        //        var output = new Result();
-        //        output.Responses = new JArray();
-
-        //        try
-        //        {
-        //            using (TcpClient client = new TcpClient())
-        //            {
-        //                IPAddress ip = IPAddress.Parse(input.IpAddress);
-        //                await client.ConnectAsync(ip, input.Port);
-
-        //                using (NetworkStream stream = client.GetStream())
-
-        //                {
-        //                    // Translate the passed message into ASCII and store it as a Byte array.
-
-        //                    foreach (var cmd in input.Command)
-        //                    {
-
-        //                        //Flush incoming stream
-
-        //                        Byte[] dataOut = new Byte[8192];
-        //                        if (stream.DataAvailable)
-        //                            await stream.ReadAsync(dataOut, 0, dataOut.Length);
-
-        //                        Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
-
-        //                        await stream.WriteAsync(dataIn, 0, dataIn.Length);
-
-        //                        //Thread.Sleep(1000);
-
-        //                        //if (stream.DataAvailable)
-        //                        //{
-        //                        Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
-        //                        string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
-        //                        output.Responses.Add(responseData ?? "");
-        //                        //}
-
-        //                    }
-
-        //                    // Close everything.
-        //                    stream.Close();
-        //                    client.Close();
-        //                }
-        //            }
-        //        }
-        //        catch (ArgumentNullException e)
-        //        {
-        //            throw e;
-        //        }
-        //        catch (SocketException e)
-        //        {
-        //            throw e;
-        //        }
-
-        //        return output;
-        //    }
-
-        //    public static async Task<TCP.Result> ReadAsync(TCP.Parameters parameters, TCP.Options options)
-        //    {
-        //        int timeout = options.Timeout;
-        //        var task = TCP.TCPTasks.ASCIIRequest(parameters, options);
-
-        //        if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
-        //        {
-        //            await task;
-        //            return task.Result;
-        //        }
-        //        else
-        //        {
-
-        //            throw new Exception("Timeout");
-        //        }
-        //    }
-
         /// <summary>
-        /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCPClient
+        /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCP
         /// </summary>
-        public static async Task<Result> ASCIIRequest(Parameters input, Options options)
+        public static async Task<Result> ASCIIRequest(Parameters input, Options options, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var output = new Result
             {
                 Responses = new JArray()
@@ -115,18 +38,28 @@ namespace Frends.Community.TCP
 
                         foreach (var cmd in input.Command)
                         {
+                            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
+
+                            await stream.WriteAsync(dataIn, 0, dataIn.Length);
+
                             int timeout = options.Timeout;
-                            var task = ReadAsync(stream, cmd);
-
-                            if (task.Wait(timeout, new CancellationToken()))
+                            var task = ReadAsync(stream, options.ResponseStart, options.ResponseEnd);
+                            try
                             {
-                                await task;
-                                if (task.Result.StartsWith(options.ResponseStart??"") && task.Result.EndsWith(options.ResponseEnd??""))
-                                output.Responses.Add(task.Result);                                
-                            }
-                            else
-                                throw new TimeoutException("Timeout. Successfull responses before operation timed out: " + output.Responses);
 
+                                if (task.Wait(timeout, cancellationToken))
+                                {
+                                    await task;
+                                    output.Responses.Add(task.Result);
+                                }
+                                else
+                                    throw new TimeoutException("Timeout. Successfull responses before operation timed out: " + output.Responses);
+
+                            }
+                            catch (Exception)
+                            {
+                                throw;
+                            }
                         }
 
                         // Close everything.
@@ -147,21 +80,45 @@ namespace Frends.Community.TCP
             return output;
         }
 
-        public static async Task<string> ReadAsync(NetworkStream stream, string cmd)
+        public static async Task<string> ReadAsync(NetworkStream stream, string start, string end)
         {
-            //Flush incoming stream
-            Byte[] dataOut = new Byte[8192];
-            if (stream.DataAvailable)
-                await stream.ReadAsync(dataOut, 0, dataOut.Length);
+            string result;
 
-            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
+            while (true)
+            {
+                Byte[] dataOut = new Byte[8192];
+                Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
+                string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
 
-            await stream.WriteAsync(dataIn, 0, dataIn.Length);
+                string responseEnd = end ?? "";
+                string responseStart = start ?? "";
 
-            Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
-            string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
+                if (responseData != "")
+                {
 
-            return responseData;
+                    int startIx = 0;
+                    if (responseStart != "")
+                    {
+                        startIx = responseData.IndexOf(responseStart);
+                    };
+                    int endIx = responseData.Length;
+                    if (responseEnd != "")
+                    {
+                        endIx = responseData.IndexOf(responseEnd);
+                    };
+
+                    int length = endIx - (startIx + responseStart.Length);
+
+                    result = responseData.Substring(startIx + responseStart.Length, length);
+                    if (result!="")
+                    {
+                        break;                      
+                    }
+                }
+
+            }
+
+            return result;
         }
 
     }

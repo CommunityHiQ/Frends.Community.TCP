@@ -24,6 +24,8 @@ namespace Frends.Community.TCP.Tests
         [Test]
         public void TestSendAndReceive()
         {
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
 
             var input = new Parameters
             {
@@ -35,8 +37,8 @@ namespace Frends.Community.TCP.Tests
             var options = new Options
             {
                 Timeout = 1000,
-                ResponseStart = "COMMAND",
-                //ResponseEnd = "Response"
+                ResponseStart = "<",
+                ResponseEnd = ">"
             };
 
             var input2 = new Parameters
@@ -50,10 +52,10 @@ namespace Frends.Community.TCP.Tests
             {
                 Timeout = 1000
             };
-            var res1 = TCPTasks.ASCIIRequest(input, options).Result.Responses;
+            var res1 = TCPTasks.ASCIIRequest(input, options, token).Result.Responses;
             JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");
             Assert.AreEqual(expected.ToString(), res1.ToString()) ;
-            Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2), Throws.Exception);          
+            Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2, token), Throws.Exception);          
 
         }
 
