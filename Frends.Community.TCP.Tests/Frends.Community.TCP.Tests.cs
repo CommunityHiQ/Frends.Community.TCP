@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
-    [Ignore("Test locally")]
+    //[Ignore("Test locally")]
 
     [TestFixture]
     class TestClass
@@ -36,7 +36,7 @@ namespace Frends.Community.TCP.Tests
             {
                 Timeout = 1000,
                 ResponseStart = "COMMAND",
-                ResponseEnd = "Response"
+                //ResponseEnd = "Response"
             };
 
             var input2 = new Parameters

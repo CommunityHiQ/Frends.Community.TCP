@@ -121,11 +121,11 @@ namespace Frends.Community.TCP
                             if (task.Wait(timeout, new CancellationToken()))
                             {
                                 await task;
-                                if (task.Result.StartsWith(options.ResponseStart??"") && task.Result.EndsWith(options.ResponseEnd?? ""))
+                                if (task.Result.StartsWith(options.ResponseStart??"") && task.Result.EndsWith(options.ResponseEnd??""))
                                 output.Responses.Add(task.Result);                                
                             }
                             else
-                                throw new Exception("Timeout. Successfull responses before operation timed out: " + output.Responses);
+                                throw new TimeoutException("Timeout. Successfull responses before operation timed out: " + output.Responses);
 
                         }
 
