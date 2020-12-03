@@ -9,7 +9,7 @@ namespace Frends.Community.TCP
     public class Parameters
     {
         [DisplayFormat(DataFormatString = "Text")]
-        public string[] Command { get; set; }
+        public Command[] Commands { get; set; }
 
         [DisplayFormat(DataFormatString = "Text")]
         public string IpAddress { get; set; }
@@ -19,6 +19,14 @@ namespace Frends.Community.TCP
         public int Port { get; set; }
     }
 
+    public class Command
+    {
+        public string CommandString { get; set; }
+        public string ResponseStart { get; set; }
+        public string ResponseEnd { get; set; }
+
+    }
+
     public class Options
     {
         /// <summary>
@@ -26,11 +34,6 @@ namespace Frends.Community.TCP
         /// </summary>
         [DefaultValue(10000)]
         public int Timeout { get; set; }
-
-        public string ResponseStart { get; set; }
-
-        public string ResponseEnd { get; set; }
-
     }
 
     public class Result

@@ -29,7 +29,8 @@ namespace Frends.Community.TCP.Tests
 
             var input = new Parameters
             {
-                Command = new string[] { "COMMAND1", "COMMAND2"},
+                Commands = new Command[] { new Command { CommandString = "COMMAND1", ResponseStart = "<", ResponseEnd = ">" },
+                    new Command{CommandString = "COMMAND2", ResponseStart = "<", ResponseEnd = ">" } },
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };
@@ -37,13 +38,13 @@ namespace Frends.Community.TCP.Tests
             var options = new Options
             {
                 Timeout = 10000,
-                ResponseStart = "<",
-                ResponseEnd = ">"
+
             };
 
             var input2 = new Parameters
             {
-                Command = new string[] {"COMMAND1", "", "SEND_EMPTY_RESP", "STOP" },
+                Commands = new Command[] { new Command { CommandString = "COMMAND1" }, new Command { CommandString = "" },
+                    new Command {CommandString = "SEND_EMPTY_RESP" }, new Command {CommandString ="STOP" } },
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };

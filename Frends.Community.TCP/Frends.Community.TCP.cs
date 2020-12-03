@@ -38,16 +38,16 @@ namespace Frends.Community.TCP
 
                     {
 
-                        foreach (var cmd in input.Command)
+                        foreach (var cmd in input.Commands)
                         {
-                            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd);
+                            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
-                            Thread.Sleep(1000);
+                            //Thread.Sleep(1000);
                             cancellationToken.ThrowIfCancellationRequested();
 
                             int timeout = options.Timeout;
-                            Task<string> task = Read(stream, options.ResponseStart, options.ResponseEnd, cancellationToken);
+                            Task<string> task = Read(stream, cmd.ResponseStart, cmd.ResponseEnd, cancellationToken);
 
                             try
                             {
