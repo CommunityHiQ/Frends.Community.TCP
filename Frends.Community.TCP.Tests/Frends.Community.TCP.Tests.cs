@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
-    [Ignore("Test locally")]
+    //[Ignore("Test locally")]
 
     [TestFixture]
     class TestClass
@@ -36,27 +36,27 @@ namespace Frends.Community.TCP.Tests
 
             var options = new Options
             {
-                Timeout = 1000,
+                Timeout = 10000,
                 ResponseStart = "<",
                 ResponseEnd = ">"
             };
 
             var input2 = new Parameters
             {
-                Command = new string[] { "COMMAND1", "COMMAND2", "", "SEND_EMPTY_RESP", "STOP" },
+                Command = new string[] {"COMMAND1", "", "SEND_EMPTY_RESP", "STOP" },
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };
 
             var options2 = new Options
             {
-                Timeout = 1000
+                Timeout = 4000
             };
             var res1 = TCPTasks.ASCIIRequest(input, options, token).Result.Responses;
-            JArray expected = JArray.Parse(@"['COMMAND1Response','COMMAND2Response']");
-            Assert.AreEqual(expected.ToString(), res1.ToString()) ;
-            Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2, token), Throws.Exception);          
-
+            JArray expected = JArray.Parse(@"['COMMAND1Response_ResponseContinues','COMMAND2Response_ResponseContinues']");
+            Assert.AreEqual(expected.ToString(), res1.ToString());
+            Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2, token), Throws.Exception);
+            
         }
 
     }

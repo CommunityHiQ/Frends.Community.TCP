@@ -33,14 +33,14 @@ namespace Frends.Community.TCP.Tests
                     NetworkStream stream = client.GetStream();
 
                     //msgStart should be ignored by the task. Only responses to commands should be returned.
-                    byte[] msgStart = System.Text.Encoding.ASCII.GetBytes(data + "Message on listener launch");
+                    byte[] msgStart = System.Text.Encoding.ASCII.GetBytes("Message on listener launch");
                     stream.Write(msgStart, 0, msgStart.Length);
 
                     int i;
 
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
-                        //Thread.Sleep(100);
+                        //Thread.Sleep(1000);
 
                         data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
@@ -56,8 +56,15 @@ namespace Frends.Community.TCP.Tests
 
                         else
                         {
-                            byte[] msg = System.Text.Encoding.ASCII.GetBytes("<" + data + "Response" + ">");
-                            stream.Write(msg, 0, msg.Length);
+                            byte[] msg1 = System.Text.Encoding.ASCII.GetBytes("<" + data + "Response");
+                            byte[] msg2 = System.Text.Encoding.ASCII.GetBytes("_ResponseContinues" + ">");
+                            byte[] msg3 = System.Text.Encoding.ASCII.GetBytes("_this should be discarded");
+                            stream.Write(msg1, 0, msg1.Length);
+                            Thread.Sleep(1000);
+                            stream.Write(msg2, 0, msg2.Length);
+                            Thread.Sleep(1000);
+                            stream.Write(msg3, 0, msg3.Length);
+
                         }
 
 
