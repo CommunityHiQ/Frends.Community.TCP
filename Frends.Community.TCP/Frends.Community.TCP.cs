@@ -43,7 +43,7 @@ namespace Frends.Community.TCP
                             Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
-                            //Thread.Sleep(1000);
+                            Thread.Sleep(1000);
                             cancellationToken.ThrowIfCancellationRequested();
 
                             int timeout = options.Timeout;
