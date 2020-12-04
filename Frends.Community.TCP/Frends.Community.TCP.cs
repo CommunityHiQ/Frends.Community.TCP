@@ -26,6 +26,9 @@ namespace Frends.Community.TCP
                 Responses = new JArray()
             };
 
+            if (options.Timeout==0)
+                options.Timeout = 60000;
+
             try
             {
                 using (TcpClient client = new TcpClient())
@@ -47,7 +50,7 @@ namespace Frends.Community.TCP
                             cancellationToken.ThrowIfCancellationRequested();
 
                             int timeout = options.Timeout;
-                            Task<string> task = Read(stream, cmd.ResponseStart, cmd.ResponseEnd, cancellationToken);
+                            Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
 
                             try
                             {
@@ -84,63 +87,52 @@ namespace Frends.Community.TCP
             return output;
         }
 
-        private static async Task<string> Read(NetworkStream stream, string start, string end, CancellationToken token)
+        private static async Task<string> Read(NetworkStream stream, CancellationToken token, string start = "", string end = "")
         {
             token.ThrowIfCancellationRequested();
-            string result = null;
-
-            string responseEnd = end ?? "";
-            string responseStart = start ?? "";
+           
+            string result = "";
 
             try
             {
                 while (true)
-                {                    
+                {
+ 
                     Byte[] dataOut = new Byte[8192];
                     Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
                     string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
                     token.ThrowIfCancellationRequested();
-
+                    
                     if (responseData != "")
                     {
-
                         int startIx = 0;
-                        if (responseStart != "")
-                        {
-                            startIx = responseData.IndexOf(responseStart);
-                        };
-                        int endIx = responseData.Length;
-                        if (responseEnd != "" && responseData.Contains(responseEnd))
-                        {
-                            endIx = responseData.IndexOf(responseEnd);
-                        };
-
-                        int length = endIx - (startIx + responseStart.Length);
-                        if (length < 0)
-                            length = responseData.Length - (startIx + responseStart.Length);
-
-                        string subStr = responseData.Substring(startIx + responseStart.Length, length);
-                        if (subStr != "")
-                        {
-                            result += subStr;
+                        if (start != "" && responseData.Contains(start))
+                            startIx = responseData.IndexOf(start);
                             
-                        }
-                    }
+                        int endIx = responseData.Length-1;
+                        if (end != "" && responseData.Contains(end))
+                            endIx = responseData.IndexOf(end);
 
-                        if (responseData.Contains(responseEnd))
+                        int length = endIx - startIx + 1;
+
+                        string subStr = responseData.Substring(startIx, length);
+
+                        result += subStr;
+
+                        if (responseData.Contains(end))
                             break;
+                    }
 
                 }
             }
             catch (Exception)
             {
                 throw;
-
             }
 
             return result;
 
-        }               
+        }
 
     }
 }

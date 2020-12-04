@@ -56,8 +56,8 @@ namespace Frends.Community.TCP.Tests
 
                         else
                         {
-                            byte[] msg1 = System.Text.Encoding.ASCII.GetBytes("<" + data + "Response");
-                            byte[] msg2 = System.Text.Encoding.ASCII.GetBytes("_ResponseContinues" + ">");
+                            byte[] msg1 = System.Text.Encoding.ASCII.GetBytes("...<" + data + "Response");
+                            byte[] msg2 = System.Text.Encoding.ASCII.GetBytes("_ResponseContinues>...");
                             byte[] msg3 = System.Text.Encoding.ASCII.GetBytes("_this should be discarded");
                             stream.Write(msg1, 0, msg1.Length);
                             Thread.Sleep(1000);
