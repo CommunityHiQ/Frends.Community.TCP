@@ -30,7 +30,8 @@ namespace Frends.Community.TCP.Tests
             var input = new Parameters
             {
                 Commands = new Command[] { new Command { CommandString = "COMMAND1", ResponseStart = "<C", ResponseEnd = ">" },
-                    new Command{CommandString = "COMMAND2", ResponseStart = "<", ResponseEnd = ">" } },
+                new Command{CommandString = "COMMAND2", ResponseStart = "<", ResponseEnd = "" },
+                new Command{CommandString = "COMMAND3", ResponseStart = "<", ResponseEnd = ">" }},
                 IpAddress = "127.0.0.1",
                 Port = 13000
             };
@@ -51,10 +52,11 @@ namespace Frends.Community.TCP.Tests
 
             var options2 = new Options
             {
-                Timeout = 4000
+                
             };
+
             var res1 = TCPTasks.ASCIIRequest(input, options, token).Result.Responses;
-            JArray expected = JArray.Parse(@"['<COMMAND1Response_ResponseContinues>','<COMMAND2Response_ResponseContinues>']");
+            JArray expected = JArray.Parse(@"['<COMMAND1Response_ResponseContinues>','<COMMAND2Response','<COMMAND3Response_ResponseContinues>' ]");
             Assert.AreEqual(expected.ToString(), res1.ToString());
             Assert.That(async () => await TCPTasks.ASCIIRequest(input2, options2, token), Throws.Exception);
             

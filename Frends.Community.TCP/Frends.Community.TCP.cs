@@ -26,7 +26,7 @@ namespace Frends.Community.TCP
                 Responses = new JArray()
             };
 
-            if (options.Timeout==0)
+            if (options.Timeout.Equals(null))
                 options.Timeout = 60000;
 
             try
@@ -46,6 +46,7 @@ namespace Frends.Community.TCP
                             Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
 
                             await stream.WriteAsync(dataIn, 0, dataIn.Length);
+                            
                             Thread.Sleep(1000);
                             cancellationToken.ThrowIfCancellationRequested();
 
@@ -56,20 +57,17 @@ namespace Frends.Community.TCP
                             {
                                 if (task.Wait(timeout, cancellationToken))
                                 {
-                                    //await Task.Delay(1000);
                                     await task;
                                     output.Responses.Add(task.Result);
-
                                 }
                                 else
 
-                                    throw new TimeoutException("Timeout. Successfull responses before operation timed out: " + output.Responses);
+                                    throw new TimeoutException();
 
                             }
                             catch (Exception)
                             {
                                 throw;
-
                             }
                         }
 
@@ -97,40 +95,47 @@ namespace Frends.Community.TCP
             {
                 while (true)
                 {
- 
+
                     Byte[] dataOut = new Byte[8192];
                     Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
                     string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
                     token.ThrowIfCancellationRequested();
-                    
-                    if (responseData != "")
+                    result += responseData;
+
+                    if (result != "")
                     {
-                        int startIx = 0;
-                        if (start != "" && responseData.Contains(start))
-                            startIx = responseData.IndexOf(start);
+                     
+                        if (start == "" && end == "") 
+                            return result;
+
+                        if (end == "" && result.Contains(start)) 
+                            return result.Substring(result.IndexOf(start));
+
+                        if (start == "" && result.Contains(end)) 
+                            return result.Substring(0,(result.IndexOf(end)+end.Length));
+
+                        if (result.Contains(start))
+                        {
+                            var startIndex = result.IndexOf(start);
                             
-                        int endIx = responseData.Length-1;
-                        if (end != "" && responseData.Contains(end))
-                            endIx = responseData.IndexOf(end);
+                            if (result.IndexOf(end, startIndex) > -1)
+                            {
+                                var length = result.IndexOf(end, startIndex) - startIndex + end.Length;
+                                return result.Substring(startIndex, length);
+                            }
 
-                        int length = endIx - startIx + 1;
+                        }                        
 
-                        string subStr = responseData.Substring(startIx, length);
-
-                        result += subStr;
-
-                        if (responseData.Contains(end))
-                            break;
                     }
 
                 }
+
+
             }
             catch (Exception)
             {
                 throw;
             }
-
-            return result;
 
         }
 

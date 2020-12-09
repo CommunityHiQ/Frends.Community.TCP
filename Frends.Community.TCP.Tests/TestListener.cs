@@ -18,8 +18,9 @@ namespace Frends.Community.TCP.Tests
             {
                 Int32 port = 13000;
                 IPAddress localAddr = IPAddress.Parse("127.0.0.1");
-                server = new TcpListener(localAddr, port);
+                server = new TcpListener(localAddr, port);                
                 server.Start();
+                
 
                 Byte[] bytes = new Byte[256];
                 String data = null;
@@ -27,6 +28,7 @@ namespace Frends.Community.TCP.Tests
                 while (true)
                 {
                     TcpClient client = server.AcceptTcpClient();
+                    client.NoDelay = true;
 
                     data = null;
 
@@ -40,10 +42,9 @@ namespace Frends.Community.TCP.Tests
 
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
-                        //Thread.Sleep(1000);
 
                         data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-
+                        
                         data = data.ToUpper();
 
                         if (data.Equals("STOP"))
@@ -58,7 +59,8 @@ namespace Frends.Community.TCP.Tests
                         {
                             byte[] msg1 = System.Text.Encoding.ASCII.GetBytes("...<" + data + "Response");
                             byte[] msg2 = System.Text.Encoding.ASCII.GetBytes("_ResponseContinues>...");
-                            byte[] msg3 = System.Text.Encoding.ASCII.GetBytes("_this should be discarded");
+                            byte[] msg3 = System.Text.Encoding.ASCII.GetBytes("_this should be discarded only for command1 response");
+                            
                             stream.Write(msg1, 0, msg1.Length);
                             Thread.Sleep(1000);
                             stream.Write(msg2, 0, msg2.Length);
