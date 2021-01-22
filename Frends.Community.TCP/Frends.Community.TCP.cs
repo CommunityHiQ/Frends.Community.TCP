@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
@@ -14,60 +15,100 @@ namespace Frends.Community.TCP
     public static class TCPTasks
     {
         /// <summary>
-        /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCPClient
+        /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCP
         /// </summary>
-        public static async Task<Result> ASCIIRequest(Parameters input, Options options)
+        public static async Task<Result> ASCIIRequest(Parameters input, Options options, CancellationToken cancellationToken)
         {
-            var output = new Result();
-            output.Responses = new JArray();
 
-            try
+            var output = new Result
             {
-                using (TcpClient client = new TcpClient())
+                Responses = new JArray()
+            };
+
+            if (options.Timeout.Equals(null))
+                options.Timeout = 60000;
+
+
+            using (TcpClient client = new TcpClient())
+            {
+                IPAddress ip = IPAddress.Parse(input.IpAddress);
+                await client.ConnectAsync(ip, input.Port);
+
+                using (NetworkStream stream = client.GetStream())
+
                 {
-                    IPAddress ip = IPAddress.Parse(input.IpAddress);
-                    await client.ConnectAsync(ip, input.Port);
 
-                    using (NetworkStream stream = client.GetStream())
-                    using (var writer = new StreamWriter(stream))
-                    using (var reader = new StreamReader(stream))
+                    foreach (var cmd in input.Commands)
                     {
+                        Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
 
-                        stream.ReadTimeout = options.Timeout;
+                        await stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
 
-                        // Translate the passed message into ASCII and store it as a Byte array.
+                        Thread.Sleep(1000);
 
-                        foreach (var cmd in input.Command)
+                        int timeout = options.Timeout;
+                        Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
+
+                        if (task.Wait(timeout, cancellationToken))
                         {
-                            Byte[] data = System.Text.Encoding.ASCII.GetBytes(cmd);
-
-                            await stream.WriteAsync(data, 0, data.Length);
-
-                            data = new Byte[256];
-
-                            Int32 bytes = await stream.ReadAsync(data, 0, data.Length);
-                            string responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
-                            output.Responses.Add(responseData);
-
+                            await task;
+                            output.Responses.Add(task.Result);
                         }
+                        else
 
-                        // Close everything.
-                        stream.Close();
-                        client.Close();
+                            throw new TimeoutException();
                     }
+
+                    // Close everything.
+                    stream.Close();
+                    client.Close();
                 }
             }
-            catch (ArgumentNullException e)
-            {
-                throw e;
-            }
-            catch (SocketException e)
-            {
-                throw e;
-            }
+
 
             return output;
         }
 
+        private static async Task<string> Read(NetworkStream stream, CancellationToken cancellationToken, string start = "", string end = "")
+        {
+            string result = "";
+
+            while (true)
+            {
+
+                Byte[] dataOut = new Byte[8192];
+                Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length, cancellationToken);
+                string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
+                
+                result += responseData;
+
+                if (result != "")
+                {
+
+                    if (start == "" && end == "")
+                        return result;
+
+                    if (end == "" && result.Contains(start))
+                        return result.Substring(result.IndexOf(start));
+
+                    if (start == "" && result.Contains(end))
+                        return result.Substring(0, (result.IndexOf(end) + end.Length));
+
+                    if (result.Contains(start))
+                    {
+                        var startIndex = result.IndexOf(start);
+
+                        if (result.IndexOf(end, startIndex) > -1)
+                        {
+                            var length = result.IndexOf(end, startIndex) - startIndex + end.Length;
+                            return result.Substring(startIndex, length);
+                        }
+
+                    }
+
+                }
+
+            }
+        }
     }
 }

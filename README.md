@@ -78,3 +78,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | Version | Changes |
 | ------- | ------- |
 | 0.0.1   | Demo version |
+| 0.0.2   | Flush incoming stream before new command |
