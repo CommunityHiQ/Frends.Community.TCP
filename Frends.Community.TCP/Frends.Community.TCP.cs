@@ -19,7 +19,6 @@ namespace Frends.Community.TCP
         /// </summary>
         public static async Task<Result> ASCIIRequest(Parameters input, Options options, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
 
             var output = new Result
             {
@@ -29,115 +28,87 @@ namespace Frends.Community.TCP
             if (options.Timeout.Equals(null))
                 options.Timeout = 60000;
 
-            try
+
+            using (TcpClient client = new TcpClient())
             {
-                using (TcpClient client = new TcpClient())
+                IPAddress ip = IPAddress.Parse(input.IpAddress);
+                await client.ConnectAsync(ip, input.Port);
+
+                using (NetworkStream stream = client.GetStream())
+
                 {
-                    IPAddress ip = IPAddress.Parse(input.IpAddress);
-                    await client.ConnectAsync(ip, input.Port);
-                    cancellationToken.ThrowIfCancellationRequested();
 
-                    using (NetworkStream stream = client.GetStream())
-
+                    foreach (var cmd in input.Commands)
                     {
+                        Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
 
-                        foreach (var cmd in input.Commands)
+                        await stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
+
+                        Thread.Sleep(1000);
+
+                        int timeout = options.Timeout;
+                        Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
+
+                        if (task.Wait(timeout, cancellationToken))
                         {
-                            Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
-
-                            await stream.WriteAsync(dataIn, 0, dataIn.Length);
-                            
-                            Thread.Sleep(1000);
-                            cancellationToken.ThrowIfCancellationRequested();
-
-                            int timeout = options.Timeout;
-                            Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
-
-                            try
-                            {
-                                if (task.Wait(timeout, cancellationToken))
-                                {
-                                    await task;
-                                    output.Responses.Add(task.Result);
-                                }
-                                else
-
-                                    throw new TimeoutException();
-
-                            }
-                            catch (Exception)
-                            {
-                                throw;
-                            }
+                            await task;
+                            output.Responses.Add(task.Result);
                         }
+                        else
 
-                        // Close everything.
-                        stream.Close();
-                        client.Close();
+                            throw new TimeoutException();
                     }
+
+                    // Close everything.
+                    stream.Close();
+                    client.Close();
                 }
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
 
             return output;
         }
 
-        private static async Task<string> Read(NetworkStream stream, CancellationToken token, string start = "", string end = "")
+        private static async Task<string> Read(NetworkStream stream, CancellationToken cancellationToken, string start = "", string end = "")
         {
-            token.ThrowIfCancellationRequested();
-           
             string result = "";
 
-            try
+            while (true)
             {
-                while (true)
+
+                Byte[] dataOut = new Byte[8192];
+                Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length, cancellationToken);
+                string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
+                
+                result += responseData;
+
+                if (result != "")
                 {
 
-                    Byte[] dataOut = new Byte[8192];
-                    Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length);
-                    string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
-                    token.ThrowIfCancellationRequested();
-                    result += responseData;
+                    if (start == "" && end == "")
+                        return result;
 
-                    if (result != "")
+                    if (end == "" && result.Contains(start))
+                        return result.Substring(result.IndexOf(start));
+
+                    if (start == "" && result.Contains(end))
+                        return result.Substring(0, (result.IndexOf(end) + end.Length));
+
+                    if (result.Contains(start))
                     {
-                     
-                        if (start == "" && end == "") 
-                            return result;
+                        var startIndex = result.IndexOf(start);
 
-                        if (end == "" && result.Contains(start)) 
-                            return result.Substring(result.IndexOf(start));
-
-                        if (start == "" && result.Contains(end)) 
-                            return result.Substring(0,(result.IndexOf(end)+end.Length));
-
-                        if (result.Contains(start))
+                        if (result.IndexOf(end, startIndex) > -1)
                         {
-                            var startIndex = result.IndexOf(start);
-                            
-                            if (result.IndexOf(end, startIndex) > -1)
-                            {
-                                var length = result.IndexOf(end, startIndex) - startIndex + end.Length;
-                                return result.Substring(startIndex, length);
-                            }
-
-                        }                        
+                            var length = result.IndexOf(end, startIndex) - startIndex + end.Length;
+                            return result.Substring(startIndex, length);
+                        }
 
                     }
 
                 }
 
-
             }
-            catch (Exception)
-            {
-                throw;
-            }
-
         }
-
     }
 }

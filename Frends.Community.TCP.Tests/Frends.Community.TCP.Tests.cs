@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Frends.Community.TCP.Tests
 {
-    [Ignore("Test locally")]
+  //  [Ignore("Test locally")]
 
     [TestFixture]
     class TestClass
