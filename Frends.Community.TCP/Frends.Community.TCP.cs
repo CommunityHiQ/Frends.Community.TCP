@@ -17,7 +17,7 @@ namespace Frends.Community.TCP
         /// <summary>
         /// Documentation: https://github.com/CommunityHiQ/Frends.Community.TCP
         /// </summary>
-        public static async Task<Result> ASCIIRequest(Parameters input, Options options, CancellationToken cancellationToken)
+        public static async Task<dynamic> ASCIIRequest(Parameters input, Options options, CancellationToken cancellationToken)
         {
 
             var output = new Result
