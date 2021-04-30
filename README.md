@@ -34,7 +34,7 @@ Send one or more TCP/IP Ascii requests
 
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Timeout | `int` | Reader timeout in seconds | `15` |
+| Timeout | `int` | Reader timeout in milliseconds | `1000` |
 
 ### Returns
 
@@ -77,5 +77,5 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 
 | Version | Changes |
 | ------- | ------- |
-| 0.0.1   | Demo version |
-| 0.0.2   | Flush incoming stream before new command |
+| 0.0.10   | Initial version |
+| 0.0.11   | Return type changed to dynamic |
