@@ -32,7 +32,19 @@ namespace Frends.Community.TCP
             using (TcpClient client = new TcpClient())
             {
                 IPAddress ip = IPAddress.Parse(input.IpAddress);
-                await client.ConnectAsync(ip, input.Port);
+
+                var cancelTask = Task.Delay(options.Timeout);
+                var connectTask = client.ConnectAsync(ip, input.Port);
+
+                //double await so if cancelTask throws exception, this throws it
+                await await Task.WhenAny(connectTask, cancelTask);
+
+                if (cancelTask.IsCompleted)
+                {
+                    //If cancelTask and connectTask both finish at the same time,
+                    //we'll consider it to be a timeout. 
+                    throw new TimeoutException("Timed out");
+                }
 
                 using (NetworkStream stream = client.GetStream())
 

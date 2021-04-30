@@ -34,7 +34,7 @@ Send one or more TCP/IP Ascii requests
 
 | Property | Type | Description | Example |
 | -------- | -------- | -------- | -------- |
-| Timeout | `int` | Reader timeout in seconds | `15` |
+| Timeout | `int` | Reader timeout in milliseconds | `1000` |
 
 ### Returns
 
