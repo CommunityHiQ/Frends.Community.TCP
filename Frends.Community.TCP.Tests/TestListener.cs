@@ -43,16 +43,22 @@ namespace Frends.Community.TCP.Tests
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
 
-                        data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        
+                        data = Encoding.ASCII.GetString(bytes, 0, i);
+                        var latindata = Encoding.GetEncoding("ISO-8859-1").GetString(bytes, 0, i);
+
                         data = data.ToUpper();
 
                         if (data.Equals("STOP"))
                             break;
                         else if (data.Equals("SEND_EMPTY_RESP"))
                         {
-                            byte[] msgEmpty = System.Text.Encoding.ASCII.GetBytes("");
+                            byte[] msgEmpty = Encoding.ASCII.GetBytes("");
                             stream.Write(msgEmpty, 0, msgEmpty.Length);
+                        }
+                        else if (latindata.Equals("²"))
+                        {
+                            byte[] msglatin = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes("*³");
+                            stream.Write(msglatin, 0, msglatin.Length);
                         }
 
                         else

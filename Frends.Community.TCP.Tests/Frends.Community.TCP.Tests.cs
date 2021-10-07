@@ -62,5 +62,28 @@ namespace Frends.Community.TCP.Tests
             
         }
 
+        [Test]
+        public void TestLatinData()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            var input = new Parameters
+            {
+                Commands = new Command[] { new Command { CommandString = "²", ResponseStart = "*", ResponseEnd = "" }},
+                IpAddress = "127.0.0.1",
+                Port = 13000
+            };
+
+            var options = new Options
+            {
+                Timeout = 60000,
+
+            };
+            var res1 = TCPTasks.ASCIIRequest(input, options, token).Result.Responses;
+            JArray expected = JArray.Parse(@"['*³']");
+            Assert.AreEqual(expected.ToString(), res1.ToString());
+        }
+
     }
 }

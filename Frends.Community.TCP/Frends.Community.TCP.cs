@@ -52,8 +52,8 @@ namespace Frends.Community.TCP
 
                     foreach (var cmd in input.Commands)
                     {
-                        Byte[] dataIn = System.Text.Encoding.ASCII.GetBytes(cmd.CommandString);
-
+                        Byte[] dataIn = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(cmd.CommandString);
+                        
                         await stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
 
                         Thread.Sleep(1000);
@@ -90,7 +90,7 @@ namespace Frends.Community.TCP
 
                 Byte[] dataOut = new Byte[8192];
                 Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length, cancellationToken);
-                string responseData = System.Text.Encoding.ASCII.GetString(dataOut, 0, bytes);
+                string responseData = System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(dataOut, 0, bytes);
                 
                 result += responseData;
 
