@@ -54,20 +54,26 @@ namespace Frends.Community.TCP
                     {
                         Byte[] dataIn = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(cmd.CommandString);
                         
-                        await stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
+                        Task writeTask = stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
+                        Task writeCancelTask = Task.Delay(options.Timeout);
+                        await await Task.WhenAny(writeTask, writeCancelTask);
+
+                        if (writeCancelTask.IsCompleted)
+                        {
+                            throw new TimeoutException("Timed out");
+                        }
 
                         Thread.Sleep(1000);
 
                         int timeout = options.Timeout;
                         Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
 
-                        if (task.Wait(timeout, cancellationToken))
+                        if (await Task.WhenAny(task, Task.Delay(timeout, cancellationToken)) == task)
                         {
                             await task;
                             output.Responses.Add(task.Result);
                         }
                         else
-
                             throw new TimeoutException();
                     }
 
