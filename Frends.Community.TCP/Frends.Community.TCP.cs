@@ -25,102 +25,108 @@ namespace Frends.Community.TCP
                 Responses = new JArray()
             };
 
-            if (options.Timeout.Equals(null))
-                options.Timeout = 60000;
-
-
-            using (TcpClient client = new TcpClient())
+            if (options.Timeout.Equals(null)) 
             {
-                IPAddress ip = IPAddress.Parse(input.IpAddress);
+                options.Timeout = 60000;
+            }
+            
+            // Timeout after the set limit
+            var cancelTask = Task.Delay(options.Timeout);
 
-                var cancelTask = Task.Delay(options.Timeout);
+            using (TcpClient client = new TcpClient()) 
+            {
+
+                IPAddress ip = IPAddress.Parse(input.IpAddress);
                 var connectTask = client.ConnectAsync(ip, input.Port);
 
-                //double await so if cancelTask throws exception, this throws it
-                await await Task.WhenAny(connectTask, cancelTask);
-
-                if (cancelTask.IsCompleted)
+                if (await Task.WhenAny(connectTask, cancelTask) == connectTask)
                 {
-                    //If cancelTask and connectTask both finish at the same time,
-                    //we'll consider it to be a timeout. 
+                    // Await in if-condition awaits WhenAny(), await the actual task in case it failed
+                    await connectTask;
+                    using (NetworkStream stream = client.GetStream()) 
+                    {
+                        foreach (var cmd in input.Commands)
+                        {
+                            byte[] dataIn = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(cmd.CommandString);
+
+                            var writeTask = stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
+                            if (await Task.WhenAny(writeTask, cancelTask) == writeTask)
+                            {   
+                                await writeTask;
+
+                                // This read loop was previously in a separate Task-method, so when the main task timed out
+                                // the read task that got stuck in a loop was still running in the background
+                                // Merged the tasks as a fix, another option would have been merging the timeout task with the parent CancellationToken
+                                string result = "";
+                                byte[] dataOut = new byte[8192]; 
+                                while (true) 
+                                {
+                                    if (cancellationToken.IsCancellationRequested) 
+                                    {
+                                        break;
+                                    }
+
+                                    var readTask = stream.ReadAsync(dataOut, 0, dataOut.Length, cancellationToken);
+                                    
+                                    if (await Task.WhenAny(readTask, cancelTask) == readTask)
+                                    {
+                                        int bytes = await readTask;
+
+                                        if (bytes == 0) 
+                                        {
+                                            // Server closed socket
+                                            break;
+                                        }
+
+                                        string responseData = System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(dataOut, 0, bytes);
+                                        result += responseData;
+
+                                        // Validate response
+                                        if (cmd.ResponseStart == "" && cmd.ResponseEnd == "") 
+                                        {
+                                            output.Responses.Add(result);
+                                            break;
+                                        }
+                                        else if (cmd.ResponseEnd == "" && result.Contains(cmd.ResponseStart)) 
+                                        {
+                                            output.Responses.Add(result.Substring(result.IndexOf(cmd.ResponseStart)));
+                                            break;
+                                        } 
+                                        else if (cmd.ResponseStart == "" && result.Contains(cmd.ResponseEnd)) 
+                                        {
+                                            output.Responses.Add(result.Substring(0, result.IndexOf(cmd.ResponseEnd) + cmd.ResponseEnd.Length));
+                                            break;
+                                        } 
+                                        else if (result.Contains(cmd.ResponseStart)) 
+                                        {
+                                            var index = result.IndexOf(cmd.ResponseStart);
+                                            if (result.IndexOf(cmd.ResponseEnd, index) > -1) 
+                                            {
+                                                var length = result.IndexOf(cmd.ResponseEnd, index) - index + cmd.ResponseEnd.Length;
+                                                output.Responses.Add(result.Substring(index, length));
+                                                break;
+                                            }
+                                        }
+                                    } 
+                                    else 
+                                    {
+                                        throw new TimeoutException("Timed out");
+                                    }
+                                }
+                            } 
+                            else 
+                            {
+                                throw new TimeoutException("Timed out");
+                            }
+                        }
+                    }
+                } 
+                else 
+                {
                     throw new TimeoutException("Timed out");
                 }
-
-                using (NetworkStream stream = client.GetStream())
-
-                {
-
-                    foreach (var cmd in input.Commands)
-                    {
-                        Byte[] dataIn = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(cmd.CommandString);
-                        
-                        await stream.WriteAsync(dataIn, 0, dataIn.Length, cancellationToken);
-
-                        Thread.Sleep(1000);
-
-                        int timeout = options.Timeout;
-                        Task<string> task = Read(stream, cancellationToken, cmd.ResponseStart, cmd.ResponseEnd);
-
-                        if (task.Wait(timeout, cancellationToken))
-                        {
-                            await task;
-                            output.Responses.Add(task.Result);
-                        }
-                        else
-
-                            throw new TimeoutException();
-                    }
-
-                    // Close everything.
-                    stream.Close();
-                    client.Close();
-                }
             }
-
-
             return output;
-        }
-
-        private static async Task<string> Read(NetworkStream stream, CancellationToken cancellationToken, string start = "", string end = "")
-        {
-            string result = "";
-
-            while (true)
-            {
-
-                Byte[] dataOut = new Byte[8192];
-                Int32 bytes = await stream.ReadAsync(dataOut, 0, dataOut.Length, cancellationToken);
-                string responseData = System.Text.Encoding.GetEncoding("ISO-8859-1").GetString(dataOut, 0, bytes);
-                
-                result += responseData;
-
-                if (result != "")
-                {
-
-                    if (start == "" && end == "")
-                        return result;
-
-                    if (end == "" && result.Contains(start))
-                        return result.Substring(result.IndexOf(start));
-
-                    if (start == "" && result.Contains(end))
-                        return result.Substring(0, (result.IndexOf(end) + end.Length));
-
-                    if (result.Contains(start))
-                    {
-                        var startIndex = result.IndexOf(start);
-
-                        if (result.IndexOf(end, startIndex) > -1)
-                        {
-                            var length = result.IndexOf(end, startIndex) - startIndex + end.Length;
-                            return result.Substring(startIndex, length);
-                        }
-
-                    }
-
-                }
-
-            }
         }
     }
 }
