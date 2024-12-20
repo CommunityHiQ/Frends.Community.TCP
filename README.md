@@ -79,3 +79,4 @@ NOTE: Be sure to merge the latest from "upstream" before making a pull request!
 | ------- | ------- |
 | 0.0.1   | Demo version |
 | 0.0.2   | Flush incoming stream before new command |
+| 1.0.0   | Added target frameworks net6 & net8. Updated dependencies: downgraded Newtonsoft.Json to 12.0.1, upgraded System.ComponentModel.Annotations to 5.0.0, NUnit3TestAdapter to 4.6.0 |
